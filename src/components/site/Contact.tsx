@@ -5,11 +5,12 @@ import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
 import { AnimatePresence, motion } from "motion/react";
+import { Check, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FlowButton } from "./FlowButton";
-import { callHref, site, whatsappHref } from "@/lib/site";
+import { callHref, emailHref, site, whatsappHref } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const needs = ["Website", "Video", "Both"];
@@ -94,6 +95,15 @@ export function Contact() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const [currency, setCurrency] = useState<Currency>("USD");
+  const [copied, setCopied] = useState(false);
+
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(site.email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {}
+  };
   const budgets = currencies.find((c) => c.code === currency)!.budgets;
 
   useGSAP(
@@ -203,9 +213,21 @@ export function Contact() {
           </div>
           <div className="contact-in">
             <p className="text-sm text-mist">Email</p>
-            <a href={`mailto:${site.email}`} className="display mt-2 inline-block break-all text-xl underline decoration-paper/20 underline-offset-[6px] transition-colors hover:decoration-ember-hot md:text-2xl" data-cursor="hover">
-              {site.email}
-            </a>
+            <div className="mt-2 flex items-center gap-3">
+              <a href={emailHref} target="_blank" rel="noopener noreferrer" className="display inline-block min-w-0 break-all text-xl underline decoration-paper/20 underline-offset-[6px] transition-colors hover:decoration-ember-hot md:text-2xl" data-cursor="hover">
+                {site.email}
+              </a>
+              <button
+                type="button"
+                onClick={copyEmail}
+                aria-label={copied ? "Email copied" : "Copy email address"}
+                title={copied ? "Copied!" : "Copy email"}
+                className="grid size-9 shrink-0 place-items-center rounded-full border border-hair text-paper/70 transition-colors hover:border-paper/30 hover:text-paper"
+                data-cursor="hover"
+              >
+                {copied ? <Check className="size-4 text-ember-hot" /> : <Copy className="size-4" />}
+              </button>
+            </div>
           </div>
           <div className="contact-in">
             <p className="text-sm text-mist">What happens next</p>

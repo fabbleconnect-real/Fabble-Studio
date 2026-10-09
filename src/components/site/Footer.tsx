@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { callHref, chapters, site, whatsappHref } from "@/lib/site";
+import { callHref, chapters, emailHref, site, whatsappHref } from "@/lib/site";
 import { LogoMark } from "./Logo";
 import { scrollToId, useLenis } from "./SmoothScroll";
 
@@ -63,7 +63,7 @@ export function Footer() {
           <p className="text-sm text-mist">Contact</p>
           <ul className="mt-4 space-y-2">
             <li>
-              <a href={`mailto:${site.email}`} className={`${link} break-all`} data-cursor="hover">
+              <a href={emailHref} target="_blank" rel="noopener noreferrer" className={`${link} break-all`} data-cursor="hover">
                 {site.email}
               </a>
             </li>

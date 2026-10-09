@@ -15,6 +15,8 @@ export const site = {
 };
 
 export const whatsappHref = `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(site.whatsappMessage)}`;
+// Opens a Gmail compose window instead of the OS default mail app (mailto:).
+export const emailHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(site.email)}`;
 export const callHref = `tel:${site.phones[0].tel}`;
 
 // Chapters shown as markers on the navbar timeline.
