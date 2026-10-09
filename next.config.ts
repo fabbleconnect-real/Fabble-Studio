@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // lets a second server (e.g. a dev preview beside `next start`) build into its own folder
+  distDir: process.env.NEXT_DIST_DIR || ".next",
 };
 
 export default nextConfig;

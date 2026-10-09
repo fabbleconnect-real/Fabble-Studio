@@ -1,0 +1,39 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fabble-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "fabble-prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "fabble-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/dev-preview.mjs"
+      ],
+      "port": 3001
+    },
+    {
+      "name": "fabble-prod-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/prod-preview.mjs"
+      ],
+      "port": 3005
+    }
+  ]
+}
