@@ -19,7 +19,7 @@ export const whatsappHref = `https://wa.me/${site.whatsapp}?text=${encodeURIComp
 export const emailHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(site.email)}`;
 export const callHref = `tel:${site.phones[0].tel}`;
 
-// Chapters shown as markers on the navbar timeline.
+// Chapters shown as markers on the navbar timeline, in page order.
 export const chapters = [
   { id: "services", label: "Services" },
   { id: "work", label: "Work" },
