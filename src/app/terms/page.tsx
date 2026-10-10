@@ -130,7 +130,7 @@ export default function TermsPage() {
       <h2>14. Governing Law and Disputes</h2>
       <p>
         These Terms are governed by the laws of India. We encourage resolving any dispute through good-faith discussion first. If it cannot
-        be resolved, it will be subject to the exclusive jurisdiction of the courts located in [your city], India.
+        be resolved, it will be subject to the exclusive jurisdiction of the courts located in Delhi, India.
       </p>
 
       <h2>15. Changes to These Terms</h2>
