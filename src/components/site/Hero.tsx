@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { AnimatePresence } from "motion/react";
 import { FlowButton } from "./FlowButton";
-import { scrollToId, useLenis } from "./SmoothScroll";
+import { scrollToId } from "./scroll";
 import { LOADED_EVENT } from "./Loader";
 import { FloatingParticles } from "./FloatingParticles";
 import { SolarOrb } from "./SolarOrb";
@@ -16,7 +16,6 @@ const ShowreelModal = dynamic(() => import("./ShowreelModal"), { ssr: false });
 export function Hero() {
   const root = useRef<HTMLElement>(null);
   const [reel, setReel] = useState(false);
-  const lenis = useLenis();
 
   useGSAP(
     () => {
@@ -31,7 +30,6 @@ export function Hero() {
       // headline: each line rises out of its own mask, one after another
       tl.from(".hero-line", { yPercent: 110, rotate: 2, duration: 1.2, stagger: 0.11 }, 0.1);
       tl.from(".hero-fade", { y: 24, opacity: 0, duration: 1, stagger: 0.08 }, 0.7);
-      tl.from(".hero-rule", { scaleX: 0, duration: 1.4, ease: "expo.inOut" }, 0.5);
 
       const start = () => {
         html.classList.remove("intro");
@@ -53,7 +51,8 @@ export function Hero() {
       gsap.to(".hero-head", { y: -90, ease: "none", scrollTrigger: scrub });
       gsap.to(".hero-bg-scroll", { yPercent: 18, ease: "none", scrollTrigger: scrub });
       gsap.to(".hero-orb-scroll", { yPercent: 14, scale: 1.12, opacity: 0.35, ease: "none", scrollTrigger: scrub });
-      gsap.to(".hero-copy", { y: -60, opacity: 0, ease: "none", scrollTrigger: { ...scrub, end: "60% top" } });
+      gsap.to(".hero-copy", { y: -60, ease: "none", scrollTrigger: { ...scrub, end: "60% top" } });
+      gsap.to(".hero-dim", { opacity: 0, ease: "none", scrollTrigger: { ...scrub, end: "60% top" } });
       return () => window.removeEventListener(LOADED_EVENT, start);
     },
     { scope: root },
@@ -90,25 +89,23 @@ export function Hero() {
         </h1>
 
         <div className="hero-copy relative mt-8 flex flex-col items-center md:mt-10" data-hero-reveal>
-          <p className="hero-fade max-w-[46ch] text-lg leading-relaxed text-paper/85 md:text-xl">
-            Fabble designs and builds fast websites, and edits video for brands that want to be noticed. One studio, both crafts.
-          </p>
-          <div className="hero-fade mt-8 flex flex-wrap items-center justify-center gap-3">
-            <FlowButton href="#contact" onClick={() => scrollToId(lenis, "contact")} size="lg">
-              Start a project
-            </FlowButton>
-            <FlowButton variant="ghost" size="lg" onClick={() => setReel(true)} cursorLabel="Play">
-              Watch the reel
-            </FlowButton>
+          <div className="hero-dim">
+            <p className="hero-fade max-w-[46ch] text-lg leading-relaxed text-paper/85 md:text-xl">
+              Fabble designs and builds fast websites, and edits video for brands that want to be noticed. One studio, both crafts.
+            </p>
           </div>
-        </div>
-      </div>
-
-      <div className="relative mt-12 md:mt-14" data-hero-reveal>
-        <div className="hero-rule h-px origin-left bg-paper/20" />
-        <div className="hero-fade mt-4 flex items-center justify-between gap-6 text-sm text-mist">
-          <p>Web design and development</p>
-          <p className="hidden sm:block">Video editing and motion</p>
+          <div className="hero-fade mt-8 flex flex-wrap items-center justify-center gap-3">
+            <div className="hero-dim hero-start">
+              <FlowButton href="#contact" onClick={() => scrollToId("contact")} size="lg">
+                Start a project
+              </FlowButton>
+            </div>
+            <div className="hero-dim">
+              <FlowButton variant="ghost" size="lg" onClick={() => setReel(true)} cursorLabel="Play">
+                Watch the reel
+              </FlowButton>
+            </div>
+          </div>
         </div>
       </div>
 

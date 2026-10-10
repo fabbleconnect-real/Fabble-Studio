@@ -1,4 +1,3 @@
-import { SmoothScroll } from "@/components/site/SmoothScroll";
 import { Cursor } from "@/components/site/Cursor";
 import { Loader } from "@/components/site/Loader";
 import { Nav } from "@/components/site/Nav";
@@ -13,7 +12,7 @@ import { Footer } from "@/components/site/Footer";
 
 export default function Home() {
   return (
-    <SmoothScroll>
+    <>
       <a
         href="#main"
         className="fixed left-4 top-4 z-[90] -translate-y-24 rounded-full bg-paper px-4 py-2 text-ink focus:translate-y-0"
@@ -33,6 +32,6 @@ export default function Home() {
         <Contact />
       </main>
       <Footer />
-    </SmoothScroll>
+    </>
   );
 }

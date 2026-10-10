@@ -1,11 +1,12 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { callHref, chapters, emailHref, site, whatsappHref } from "@/lib/site";
 import { LogoMark } from "./Logo";
-import { scrollToId, useLenis } from "./SmoothScroll";
+import { scrollToId } from "./scroll";
 
 function InstagramGlyph({ className }: { className?: string }) {
   return (
@@ -19,7 +20,6 @@ function InstagramGlyph({ className }: { className?: string }) {
 
 export function Footer() {
   const root = useRef<HTMLElement>(null);
-  const lenis = useLenis();
 
   useGSAP(
     () => {
@@ -51,7 +51,7 @@ export function Footer() {
           <ul className="mt-4 space-y-2">
             {chapters.map((c) => (
               <li key={c.id}>
-                <a href={`#${c.id}`} onClick={(e) => { e.preventDefault(); scrollToId(lenis, c.id); }} className={link} data-cursor="hover">
+                <a href={`/#${c.id}`} onClick={(e) => { if (scrollToId(c.id)) e.preventDefault(); }} className={link} data-cursor="hover">
                   {c.label}
                 </a>
               </li>
@@ -115,13 +115,16 @@ export function Footer() {
 
       <div className="mt-20 flex flex-wrap items-center justify-between gap-4 border-t border-hair pt-6 text-sm text-mist">
         <p>© {new Date().getFullYear()} Fabble Studio. All rights reserved.</p>
-        <div className="flex items-center gap-7">
-          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-paper" data-cursor="hover">
-            WhatsApp
-          </a>
+        <div className="flex flex-wrap items-center gap-x-7 gap-y-2">
+          <Link href="/privacy" className="transition-colors hover:text-paper" data-cursor="hover">
+            Privacy Policy
+          </Link>
+          <Link href="/terms" className="transition-colors hover:text-paper" data-cursor="hover">
+            Terms
+          </Link>
           <button
             type="button"
-            onClick={() => (lenis ? lenis.scrollTo(0, { duration: 2 }) : scrollTo({ top: 0, behavior: "smooth" }))}
+            onClick={() => scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })}
             className="transition-colors hover:text-paper"
             data-cursor="hover"
           >

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { reels, reelSrc } from "@/lib/work";
-import { useLenis } from "./SmoothScroll";
+import { lockScroll, unlockScroll } from "./scroll";
 
 /** Full-quality reel with sound. ←/→ step through the reels, Esc closes. */
 export default function ReelModal({
@@ -18,7 +18,6 @@ export default function ReelModal({
   onClose: () => void;
 }) {
   const close = useRef<HTMLButtonElement>(null);
-  const lenis = useLenis();
   const reel = reels[index];
   const src = reelSrc(reel.id);
   const step = (d: number) => onChange((index + d + reels.length) % reels.length);
@@ -26,12 +25,12 @@ export default function ReelModal({
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
     close.current?.focus();
-    lenis?.stop();
+    lockScroll();
     return () => {
-      lenis?.start();
+      unlockScroll();
       prev?.focus();
     };
-  }, [lenis]);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

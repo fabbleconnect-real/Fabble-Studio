@@ -16,7 +16,8 @@
   paper    #EEEDF7  text
   mist     #9897B5  secondary text (7.2:1 on ink)
 */
-@theme inline {
+/* not inline: utilities read these as variables, so a section can re-tint them locally */
+@theme {
   --color-ink: #07070a;
   --color-night: #0c0d1a;
   --color-indigo: #3d63ff;
@@ -28,7 +29,9 @@
   --color-paper: #eeedf7;
   --color-mist: #9897b5;
   --color-hair: rgb(238 237 247 / 0.12);
+}
 
+@theme inline {
   --font-sans: var(--ff-body);
   --font-display: var(--ff-display);
   --font-heading: var(--ff-display);
@@ -60,6 +63,15 @@
 
 :root {
   color-scheme: dark;
+  /* accents and shadows used in inline styles */
+  --drop: rgb(0 0 0 / 0.9);
+  --drop-soft: rgb(0 0 0 / 0.8);
+  --raised: #12132a;
+  --tone-web: #b78bff;
+  --tone-video: #4fdcf2;
+  --tone-web-grad: linear-gradient(90deg, #6f8cff, #b77dff);
+  --tone-video-grad: linear-gradient(90deg, #22d3ee, #6f8cff);
+  --danger-text: #ff8a80;
   --background: #07070a;
   --foreground: #eeedf7;
   --card: #0c0d1a;
@@ -93,20 +105,13 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-  html.lenis,
-  html.lenis body {
-    height: auto;
-  }
-  .lenis.lenis-smooth {
-    scroll-behavior: auto !important;
-  }
   body {
     @apply bg-background text-foreground;
     overflow-x: clip;
   }
   ::selection {
     background: var(--color-fabble);
-    color: var(--color-paper);
+    color: #fff;
   }
   :focus-visible {
     outline: 2px solid var(--color-violet);
@@ -127,6 +132,60 @@
 }
 
 @layer components {
+  /* long-form text on the legal pages */
+  .legal h2 {
+    font-family: var(--ff-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-size: clamp(1.4rem, 2.4vw, 1.75rem);
+    line-height: 1.2;
+    margin-top: 3.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-hair);
+    scroll-margin-top: 6rem;
+  }
+  .legal h3 {
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-top: 1.75rem;
+  }
+  .legal p,
+  .legal li {
+    color: color-mix(in srgb, var(--color-paper) 80%, transparent);
+    line-height: 1.75;
+    font-size: 1.05rem;
+  }
+  .legal p {
+    margin-top: 1rem;
+  }
+  .legal ul {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .legal li {
+    position: relative;
+    padding-left: 1.5rem;
+  }
+  .legal li::before {
+    content: "";
+    position: absolute;
+    left: 0.15rem;
+    top: 0.75em;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--color-ember), var(--color-ember-hot));
+  }
+  .legal a {
+    color: var(--color-paper);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-paper) 30%, transparent);
+    text-underline-offset: 4px;
+  }
+  .legal a:hover {
+    text-decoration-color: var(--color-ember-hot);
+  }
   .display {
     font-family: var(--ff-display);
     font-weight: 600;
@@ -166,4 +225,27 @@ html.loading .loader {
 }
 html.loading {
   overflow: hidden;
+}
+
+/*
+  music toggle (see SoundToggle): three bars swell about their centre line.
+  Uneven stops and tempos keep them from ever lining up; 0.17 is a dot (bar width / height).
+*/
+@keyframes eq-a {
+  0%, 100% { transform: scaleY(0.3); }
+  25% { transform: scaleY(0.6); }
+  50% { transform: scaleY(0.17); }
+  75% { transform: scaleY(0.5); }
+}
+@keyframes eq-b {
+  0%, 100% { transform: scaleY(0.6); }
+  30% { transform: scaleY(1); }
+  55% { transform: scaleY(0.35); }
+  80% { transform: scaleY(0.9); }
+}
+@keyframes eq-c {
+  0%, 100% { transform: scaleY(0.45); }
+  20% { transform: scaleY(0.17); }
+  45% { transform: scaleY(0.7); }
+  70% { transform: scaleY(0.25); }
 }

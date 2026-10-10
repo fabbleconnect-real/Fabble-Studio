@@ -162,6 +162,9 @@ export function Contact() {
         style={{
           background:
             "radial-gradient(45% 40% at 85% 20%, #a35cff26, transparent 70%), radial-gradient(40% 35% at 10% 85%, #22d3ee1a, transparent 70%)",
+          // fade out before the section edges, so the glows never end in a hard line
+          maskImage: "linear-gradient(to bottom, transparent, #000 15%, #000 60%, transparent 95%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent, #000 15%, #000 60%, transparent 95%)",
         }}
       />
       <h2 id="contact-title" className="contact-head display max-w-[14ch] text-[clamp(2.6rem,6vw,6.75rem)]">
@@ -317,7 +320,7 @@ export function Contact() {
                     {status === "sending" ? "Sending…" : "Send message"}
                   </FlowButton>
                   {status === "error" && (
-                    <p role="alert" className="text-[#ff8a80]">
+                    <p role="alert" className="text-[var(--danger-text)]">
                       {error} Try again, or message us on WhatsApp.
                     </p>
                   )}

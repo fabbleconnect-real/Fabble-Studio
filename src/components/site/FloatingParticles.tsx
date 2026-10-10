@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -48,6 +48,29 @@ export function FloatingParticles({
   className,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // one pre-blurred dot, stamped per particle: same glow as ctx.shadowBlur at a fraction of the cost.
+  // Repainted in place on a colour change, so the particles keep drifting.
+  const spriteRef = useRef<HTMLCanvasElement | null>(null);
+
+  useLayoutEffect(() => {
+    const SPRITE = 64;
+    const sprite = (spriteRef.current ??= document.createElement("canvas"));
+    sprite.width = sprite.height = SPRITE;
+    const sctx = sprite.getContext("2d")!;
+    const g = sctx.createRadialGradient(SPRITE / 2, SPRITE / 2, 0, SPRITE / 2, SPRITE / 2, SPRITE / 2);
+    sctx.fillStyle = particleColor; // let the browser normalise any CSS colour to #rrggbb
+    const hex = sctx.fillStyle.replace("#", "");
+    const [cr, cg, cb] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) || 255);
+    const rgba = (a: number) => `rgba(${cr},${cg},${cb},${a})`;
+    g.addColorStop(0, rgba(1));
+    g.addColorStop(0.22, rgba(1));
+    g.addColorStop(0.32, rgba(0.3));
+    g.addColorStop(0.6, rgba(0.05));
+    g.addColorStop(1, rgba(0));
+    sctx.clearRect(0, 0, SPRITE, SPRITE);
+    sctx.fillStyle = g;
+    sctx.fillRect(0, 0, SPRITE, SPRITE);
+  }, [particleColor]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -74,23 +97,7 @@ export function FloatingParticles({
     });
     let particles: Particle[] = [];
 
-    // one pre-blurred dot, stamped per particle: same glow as ctx.shadowBlur at a fraction of the cost
-    const SPRITE = 64;
-    const sprite = document.createElement("canvas");
-    sprite.width = sprite.height = SPRITE;
-    const sctx = sprite.getContext("2d")!;
-    const g = sctx.createRadialGradient(SPRITE / 2, SPRITE / 2, 0, SPRITE / 2, SPRITE / 2, SPRITE / 2);
-    sctx.fillStyle = particleColor; // let the browser normalise any CSS colour to #rrggbb
-    const hex = sctx.fillStyle.replace("#", "");
-    const [cr, cg, cb] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) || 255);
-    const rgba = (a: number) => `rgba(${cr},${cg},${cb},${a})`;
-    g.addColorStop(0, rgba(1));
-    g.addColorStop(0.22, rgba(1));
-    g.addColorStop(0.32, rgba(0.3));
-    g.addColorStop(0.6, rgba(0.05));
-    g.addColorStop(1, rgba(0));
-    sctx.fillStyle = g;
-    sctx.fillRect(0, 0, SPRITE, SPRITE);
+    const sprite = spriteRef.current!;
 
     const resize = () => {
       // layout size, not the transformed one (the hero scales this layer during its reveal)
@@ -199,7 +206,7 @@ export function FloatingParticles({
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [particleCount, particleSize, particleOpacity, glowIntensity, movementSpeed, mouseInfluence, particleColor, mouseGravity, gravityStrength, glowAnimation]);
+  }, [particleCount, particleSize, particleOpacity, glowIntensity, movementSpeed, mouseInfluence, mouseGravity, gravityStrength, glowAnimation]);
 
   return <canvas ref={canvasRef} className={cn("block size-full", className)} aria-hidden />;
 }

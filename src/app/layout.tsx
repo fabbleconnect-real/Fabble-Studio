@@ -22,7 +22,6 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#07070a",
-  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -30,10 +29,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     // The inline script below adds intro/loading classes before hydration, so the className mismatch is expected.
     <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
       <head>
-        {/* Flag the intro loader + hero reveal before first paint. Failsafe: if JS never runs, show the page after 2.5s. */}
+        {/* Flag the intro loader + hero reveal before first paint (homepage only). Failsafe: if JS never runs, show the page after 2.5s. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(d){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;d.classList.add('intro','loading');setTimeout(function(){d.classList.remove('intro','loading')},2500)})(document.documentElement)`,
+            __html: `(function(d){if(location.pathname!=='/'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;d.classList.add('intro','loading');setTimeout(function(){d.classList.remove('intro','loading')},2500)})(document.documentElement)`,
           }}
         />
       </head>

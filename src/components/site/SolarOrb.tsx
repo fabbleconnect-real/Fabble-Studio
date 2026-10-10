@@ -138,15 +138,27 @@ function compile(gl: WebGL2RenderingContext, type: number, src: string) {
   return s;
 }
 
+// taller than the layer so flares never hit an edge; the foot dissolves into the next section
+const CANVAS_CLASS = "absolute inset-x-0 -top-1/4 block h-[150%] w-full [mask-image:linear-gradient(to_bottom,#000_80%,transparent_100%)]";
+
 export function SolarOrb({ className, radius = 0.72 }: { className?: string; radius?: number }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   // portrait phones size the orb from the width, so let it fill more of it
   const smallRadius = Math.max(radius, 0.9);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const gl = canvas?.getContext("webgl2", { alpha: true, premultipliedAlpha: true, antialias: false });
-    if (!canvas || !gl) return;
+    const root = rootRef.current;
+    if (!root) return;
+    // A fresh canvas per mount: cleanup destroys the WebGL context, and a reused canvas
+    // (React remounts, client-side navigation back to this page) would hand back that dead context.
+    const canvas = document.createElement("canvas");
+    canvas.className = CANVAS_CLASS;
+    root.appendChild(canvas);
+    const gl = canvas.getContext("webgl2", { alpha: true, premultipliedAlpha: true, antialias: false });
+    if (!gl) {
+      canvas.remove();
+      return;
+    }
 
     let prog: WebGLProgram;
     try {
@@ -157,6 +169,7 @@ export function SolarOrb({ className, radius = 0.72 }: { className?: string; rad
       if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog) ?? "link");
     } catch (e) {
       console.warn("SolarOrb disabled:", e);
+      canvas.remove();
       return;
     }
     gl.useProgram(prog);
@@ -298,11 +311,13 @@ export function SolarOrb({ className, radius = 0.72 }: { className?: string; rad
       document.documentElement.removeEventListener("pointerleave", onLeave);
       document.removeEventListener("visibilitychange", onVis);
       gl.getExtension("WEBGL_lose_context")?.loseContext();
+      canvas.remove();
     };
   }, [radius, smallRadius]);
 
   return (
     <div
+      ref={rootRef}
       className={cn("relative size-full [container-type:size] [--r:var(--r-sm)] md:[--r:var(--r-lg)]", className)}
       style={{ "--r-lg": radius, "--r-sm": smallRadius } as React.CSSProperties}
       aria-hidden
@@ -320,11 +335,7 @@ export function SolarOrb({ className, radius = 0.72 }: { className?: string; rad
       {/* hot spots where the meridians meet */}
       <div className="absolute left-1/2 top-[calc(50%-var(--r)*50cqmin)] size-[calc(var(--r)*30cqmin)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,#ff6a3d40,#ff6a3d14_50%,transparent)]" />
       <div className="absolute left-1/2 top-[calc(50%+var(--r)*50cqmin)] size-[calc(var(--r)*30cqmin)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,#4f7bff4d,#4f7bff17_50%,transparent)]" />
-      {/* taller than the layer so flares never hit an edge; the foot dissolves into the next section */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-x-0 -top-1/4 block h-[150%] w-full [mask-image:linear-gradient(to_bottom,#000_80%,transparent_100%)]"
-      />
+      {/* the WebGL canvas is appended here by the effect above */}
     </div>
   );
 }

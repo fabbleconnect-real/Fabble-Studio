@@ -6,8 +6,7 @@ import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
 import { ArrowUpRight, Clock } from "lucide-react";
 import { LoopVideo } from "./LoopVideo";
-import { scrollToId, useLenis } from "./SmoothScroll";
-import { whatsappHref } from "@/lib/site";
+import { scrollToId } from "./scroll";
 import { cn } from "@/lib/utils";
 
 const crafts = [
@@ -20,10 +19,9 @@ const crafts = [
     loop: "service-web",
     loopLabel: "A website and its mobile view assembling out of glass panels",
     items: ["Landing pages", "Business websites", "Online stores", "Redesigns", "CMS setup", "Hosting and care"],
-    turnaround: "Landing pages in 1–2 weeks. Full sites in 3–6.",
+    turnaround: "Landing pages in 2–3 days. Full sites in 1–2 weeks.",
     cta: "Start a website",
-    eyebrowGradient: "linear-gradient(90deg, #6f8cff, #b77dff)",
-    link: "#b78bff",
+    eyebrowGradient: "var(--tone-web-grad)",
     glow: "99,102,255",
   },
   {
@@ -37,22 +35,20 @@ const crafts = [
     items: ["Reels and Shorts", "YouTube edits", "Ad creatives", "Motion titles", "Colour grading", "Captions"],
     turnaround: "Short-form in 48–72 hours. Long-form in about a week.",
     cta: "Start a video",
-    eyebrowGradient: "linear-gradient(90deg, #22d3ee, #6f8cff)",
-    link: "#4fdcf2",
+    eyebrowGradient: "var(--tone-video-grad)",
     glow: "34,211,238",
   },
 ];
 
 export function Services() {
   const root = useRef<HTMLElement>(null);
-  const lenis = useLenis();
 
   // jump to the form with this service already picked
   const start = (need: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     const radio = document.querySelector<HTMLInputElement>(`input[name="need"][value="${need}"]`);
     if (radio) radio.checked = true;
-    scrollToId(lenis, "contact");
+    scrollToId("contact");
   };
 
   useGSAP(
@@ -84,15 +80,6 @@ export function Services() {
           .from(el.querySelectorAll(".craft-item"), { y: 14, opacity: 0, stagger: 0.04, duration: 0.7, ease: "power3.out" }, 0.6);
       });
 
-      // desktop: the first panel pins and recedes while the second slides over it, like a cut
-      gsap.matchMedia().add("(min-width: 1024px)", () => {
-        const [first, second] = gsap.utils.toArray<HTMLElement>(".craft");
-        if (!first || !second) return;
-        gsap
-          .timeline({ scrollTrigger: { trigger: second, start: "top bottom", end: "top 7rem", scrub: true } })
-          .to(first.querySelector(".craft-panel"), { scale: 0.93, ease: "none" }, 0)
-          .to(first.querySelector(".craft-dim"), { opacity: 0.65, ease: "none" }, 0);
-      });
     },
     { scope: root },
   );
@@ -118,37 +105,29 @@ export function Services() {
               <article
                 key={c.key}
                 aria-labelledby={`craft-${c.key}`}
-                className={cn("craft lg:sticky", i === 0 ? "lg:top-24" : "lg:top-28")}
+                className="craft"
               >
                 <div
-                  className="craft-panel group/card relative isolate overflow-hidden rounded-[28px] bg-night ring-1 ring-white/[0.08] will-change-transform lg:h-[min(84svh,780px)] lg:rounded-[36px]"
-                  style={{ boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 60px 120px -60px rgba(${c.glow},0.55)` }}
+                  className={cn(
+                    "craft-panel group/card relative isolate flex flex-col overflow-hidden rounded-[28px] bg-night p-2.5 ring-1 ring-white/[0.08] will-change-transform lg:grid lg:items-center lg:rounded-[36px] lg:p-3",
+                    flip ? "lg:grid-cols-[1fr_44%]" : "lg:grid-cols-[44%_1fr]",
+                  )}
+                  style={{ boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 60px 120px -60px rgba(${c.glow},0.45)` }}
                 >
-                  {/* the footage: on top of the text on phones, full-bleed behind it on desktop */}
-                  <div className="relative aspect-video overflow-hidden lg:absolute lg:inset-0 lg:aspect-auto">
+                  {/* the footage sits in its own dark "screen", inset in the card with a hard rounded edge.
+                      Always 16:9 like the clips themselves, so they show whole and are never cropped or blown up. */}
+                  <div
+                    className={cn(
+                      "relative aspect-video overflow-hidden rounded-[20px] bg-ink ring-1 ring-white/[0.06] lg:rounded-[26px]",
+                      !flip && "lg:order-2",
+                    )}
+                  >
                     <div className="craft-media size-full transition-transform duration-[1.2s] [transition-timing-function:var(--ease-out-expo)] group-hover/card:scale-[1.03]">
-                      <LoopVideo
-                        name={c.loop}
-                        label={c.loopLabel}
-                        className={cn("lg:scale-[1.16]", flip ? "lg:-translate-x-[7%]" : "lg:translate-x-[7%]")}
-                      />
+                      <LoopVideo name={c.loop} label={c.loopLabel} />
                     </div>
-                    {/* phones: melt the clip into the text below */}
-                    <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-night lg:hidden" />
-                    {/* desktop: shade the text side, leave the other side to the footage */}
-                    <div
-                      aria-hidden
-                      className="absolute inset-0 hidden lg:block"
-                      style={{
-                        background: `linear-gradient(${flip ? "270deg" : "90deg"}, #0c0d1a 0%, rgba(12,13,26,0.92) 26%, rgba(12,13,26,0.55) 46%, rgba(12,13,26,0) 68%), linear-gradient(0deg, rgba(12,13,26,0.7), transparent 35%)`,
-                      }}
-                    />
                   </div>
 
-                  {/* dims as the next panel slides over */}
-                  <div aria-hidden className="craft-dim pointer-events-none absolute inset-0 z-20 bg-ink opacity-0" />
-
-                  <div className={cn("relative z-10 flex flex-col px-6 pb-8 pt-2 md:px-10 lg:absolute lg:inset-y-0 lg:w-[46%] lg:justify-between lg:p-14", flip ? "lg:right-0" : "lg:left-0")}>
+                  <div className="relative flex flex-col px-4 pb-6 pt-7 md:px-8 md:pb-8 lg:p-11">
                     <div>
                       <div className="craft-fade flex items-center gap-3 text-sm">
                         <span className="tabular-nums text-paper/50">{String(i + 1).padStart(2, "0")}</span>
@@ -177,23 +156,10 @@ export function Services() {
                             <ArrowUpRight className="size-4" aria-hidden />
                           </span>
                         </a>
-                        <a
-                          href={whatsappHref}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          data-cursor="hover"
-                          className="group/l text-[0.95rem] font-medium"
-                          style={{ color: c.link }}
-                        >
-                          Ask on WhatsApp{" "}
-                          <span aria-hidden className="inline-block transition-transform duration-300 group-hover/l:translate-x-0.5">
-                            ›
-                          </span>
-                        </a>
                       </div>
                     </div>
 
-                    <div className="mt-10 lg:mt-0">
+                    <div className="mt-10 lg:mt-12">
                       <ul className="grid grid-cols-2 gap-x-6" aria-label={`${c.title} services`}>
                         {c.items.map((it, n) => (
                           <li key={it} className="craft-item flex items-baseline gap-3 border-t border-white/[0.08] py-3 text-[0.95rem] text-paper/85">

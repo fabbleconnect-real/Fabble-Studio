@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { LogoMark } from "./Logo";
-import { useLenis } from "./SmoothScroll";
 
 export const LOADED_EVENT = "fabble:loaded";
 
@@ -23,14 +22,6 @@ const clips = [
  */
 export function Loader() {
   const root = useRef<HTMLDivElement>(null);
-  const lenis = useLenis();
-  const lenisRef = useRef(lenis);
-
-  // smooth scroll may initialise mid-intro: keep it paused until the cover lifts
-  useEffect(() => {
-    lenisRef.current = lenis;
-    if (document.documentElement.classList.contains("loading")) lenis?.stop();
-  }, [lenis]);
 
   useGSAP(
     () => {
@@ -39,7 +30,6 @@ export function Loader() {
 
       const finish = () => {
         html.classList.remove("loading");
-        lenisRef.current?.start();
       };
       const scrub = { start: 0.12, dur: 0.6 };
 

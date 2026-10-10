@@ -14,7 +14,7 @@ const faqs = [
   },
   {
     q: "How long does it take?",
-    a: "A landing page takes 1–2 weeks and a full website 3–6 weeks. Short-form video edits come back in 48–72 hours, and long-form edits in about a week. Rush delivery is possible when the schedule allows.",
+    a: "A landing page takes 2–3 days and a full website 1–2 weeks. Short-form video edits come back in 48–72 hours, and long-form edits in about a week. Rush delivery is possible when the schedule allows.",
   },
   {
     q: "Can you handle the website and the video for one launch?",

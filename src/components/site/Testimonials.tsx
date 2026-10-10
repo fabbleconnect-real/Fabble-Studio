@@ -10,8 +10,8 @@ import { testimonials, type Testimonial } from "@/lib/testimonials";
 import { cn } from "@/lib/utils";
 
 const tone = {
-  Website: { text: "#b78bff", fill: "linear-gradient(135deg, #3d63ff, #a35cff)", rgb: "163,92,255", Icon: Globe },
-  Video: { text: "#4fdcf2", fill: "linear-gradient(135deg, #22d3ee, #3d63ff)", rgb: "34,211,238", Icon: Clapperboard },
+  Website: { text: "var(--tone-web)", fill: "linear-gradient(135deg, #3d63ff, #a35cff)", rgb: "163,92,255", Icon: Globe },
+  Video: { text: "var(--tone-video)", fill: "linear-gradient(135deg, #22d3ee, #3d63ff)", rgb: "34,211,238", Icon: Clapperboard },
 } as const;
 
 const initials = (name: string) =>
@@ -169,12 +169,12 @@ function Card({ t, active }: { t: Testimonial; active: boolean }) {
       data-cursor={active ? undefined : "hover"}
       className={cn(
         "relative flex select-none flex-col rounded-[24px] p-7 ring-1 ring-inset transition-[background-color,box-shadow] duration-500 md:p-9",
-        active ? "bg-[#12132a] ring-white/[0.12]" : "cursor-pointer bg-night ring-white/[0.06]",
+        active ? "bg-[var(--raised)] ring-white/[0.12]" : "cursor-pointer bg-night ring-white/[0.06]",
       )}
       style={{
         boxShadow: active
-          ? `inset 0 1px 0 rgba(255,255,255,0.1), 0 50px 100px -40px rgba(0,0,0,0.9), 0 30px 90px -50px rgba(${tn.rgb},0.7)`
-          : "0 30px 60px -40px rgba(0,0,0,0.8)",
+          ? `inset 0 1px 0 rgba(255,255,255,0.1), 0 50px 100px -40px var(--drop), 0 30px 90px -50px rgba(${tn.rgb},0.7)`
+          : "0 30px 60px -40px var(--drop-soft)",
       }}
     >
       <figcaption className="flex items-center gap-4">
@@ -190,7 +190,7 @@ function Card({ t, active }: { t: Testimonial; active: boolean }) {
           {/* small badge: which kind of project this was */}
           <span
             aria-hidden
-            className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full ring-2 ring-[#12132a]"
+            className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full ring-2 ring-[var(--raised)]"
             style={{ background: tn.text }}
           >
             <Icon className="size-3 text-ink" strokeWidth={2.5} />

@@ -16,12 +16,13 @@ export function LogoMark({ className, priority, sizes = "48px" }: { className?: 
   );
 }
 
-export function Wordmark({ className }: { className?: string }) {
+/** `compactTablet`: drop "Studio" between 768 and 1023px, where the navbar is tight. */
+export function Wordmark({ className, compactTablet }: { className?: string; compactTablet?: boolean }) {
   return (
     <span className={cn("flex items-center gap-2.5", className)}>
       <LogoMark className="size-8" />
-      <span className="font-display text-lg tracking-[-0.02em]">
-        <span className="font-semibold">Fabble</span> <span className="font-light text-paper/75">Studio</span>
+      <span className="whitespace-nowrap font-display text-lg tracking-[-0.02em]">
+        <span className="font-semibold">Fabble</span> <span className={cn("font-light text-paper/75", compactTablet && "md:max-lg:hidden")}>Studio</span>
       </span>
     </span>
   );

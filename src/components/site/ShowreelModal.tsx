@@ -7,25 +7,24 @@ import { motion } from "motion/react";
 import { X } from "lucide-react";
 import { Showreel, SHOWREEL_FRAMES } from "@/remotion/compositions/Showreel";
 import { FPS } from "@/remotion/brand";
-import { useLenis } from "./SmoothScroll";
+import { lockScroll, unlockScroll } from "./scroll";
 
 export default function ShowreelModal({ onClose }: { onClose: () => void }) {
   const close = useRef<HTMLButtonElement>(null);
-  const lenis = useLenis();
   const reduce = typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
     close.current?.focus();
-    lenis?.stop();
+    lockScroll();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
-      lenis?.start();
+      unlockScroll();
       prev?.focus();
     };
-  }, [onClose, lenis]);
+  }, [onClose]);
 
   return createPortal(
     <motion.div

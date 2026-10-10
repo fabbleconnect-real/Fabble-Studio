@@ -20,13 +20,13 @@ const steps = [
   },
   {
     title: "Plan",
-    when: "Days 2–4",
+    when: "Days 1–2",
     body: "Wireframes for a site, a storyboard or edit plan for a video. You approve the direction before anything gets built.",
   },
   {
     title: "Build and edit",
-    when: "Week 1 onward",
-    body: "We design and develop the site or cut the footage, with a progress link every few days. Two rounds of revisions are included.",
+    when: "2 days to 2 weeks",
+    body: "We design and develop the site or cut the footage, with regular progress links along the way. Two rounds of revisions are included.",
   },
   {
     title: "Launch",
@@ -126,7 +126,7 @@ export function Process() {
       <div className="mt-14 grid gap-x-12 md:mt-24 lg:grid-cols-12">
         {/* the scrubbed composition */}
         {/* mobile: pinned under the nav, fading out at its foot so the steps slide beneath it with no hard edge */}
-        <div className="sticky top-0 z-10 self-start -mx-[var(--gutter)] bg-[linear-gradient(to_bottom,var(--color-ink)_0%,var(--color-ink)_62%,rgb(7_7_10/0.85)_76%,transparent_100%)] px-[var(--gutter)] pb-14 pt-20 lg:top-0 lg:col-span-6 lg:mx-0 lg:flex lg:h-screen lg:items-center lg:bg-none lg:px-0 lg:pb-0 lg:pt-0">
+        <div className="sticky top-0 z-10 self-start -mx-[var(--gutter)] bg-[linear-gradient(to_bottom,var(--color-ink)_0%,var(--color-ink)_62%,color-mix(in_srgb,var(--color-ink)_85%,transparent)_76%,transparent_100%)] px-[var(--gutter)] pb-14 pt-20 lg:top-0 lg:col-span-6 lg:mx-0 lg:flex lg:h-screen lg:items-center lg:bg-none lg:px-0 lg:pb-0 lg:pt-0">
           <div className="relative mx-auto flex w-full items-center gap-5 lg:block">
             <div className="relative aspect-square w-[34vw] max-w-[180px] shrink-0 lg:w-full lg:max-w-[560px]" aria-hidden>
               <ProcessPlayer ref={player} />
