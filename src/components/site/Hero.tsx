@@ -1,21 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
-import dynamic from "next/dynamic";
+import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { AnimatePresence } from "motion/react";
 import { FlowButton } from "./FlowButton";
 import { scrollToId } from "./scroll";
 import { LOADED_EVENT } from "./Loader";
 import { FloatingParticles } from "./FloatingParticles";
 import { SolarOrb } from "./SolarOrb";
 
-const ShowreelModal = dynamic(() => import("./ShowreelModal"), { ssr: false });
-
 export function Hero() {
   const root = useRef<HTMLElement>(null);
-  const [reel, setReel] = useState(false);
 
   useGSAP(
     () => {
@@ -100,16 +95,10 @@ export function Hero() {
                 Start a project
               </FlowButton>
             </div>
-            <div className="hero-dim">
-              <FlowButton variant="ghost" size="lg" onClick={() => setReel(true)} cursorLabel="Play">
-                Watch the reel
-              </FlowButton>
-            </div>
           </div>
         </div>
       </div>
 
-      <AnimatePresence>{reel && <ShowreelModal key="reel" onClose={() => setReel(false)} />}</AnimatePresence>
     </section>
   );
 }
