@@ -10,14 +10,12 @@ import { useSyncExternalStore } from "react";
  * analyser the orb reads every frame via `readBeat()`, then a gain for volume and fades.
  * The analyser sits before the gain, so the beat sync doesn't depend on the volume.
  *
- * Music is on by default, but browsers only allow sound after the visitor interacts with
- * the page, so it starts on their first click, tap or key press anywhere (`initMusic`).
- * If they turn it off, that choice is remembered.
+ * Off by default: it only ever starts from the music button, never by itself.
+ * Nothing loads until that first press.
  */
 const SRC = "/media/audio/trap-loop.flac";
 const VOLUME = 0.35;
 const FADE = 0.4; // seconds
-const PREF_KEY = "fabble-music";
 
 let ctx: AudioContext | null = null;
 let gain: GainNode | null = null;
@@ -25,26 +23,15 @@ let analyser: AnalyserNode | null = null;
 let bins: Uint8Array<ArrayBuffer> | null = null;
 let started = false;
 let loading: Promise<void> | null = null;
-let unlockedAt = -Infinity; // when the first gesture started the music
 
-const readPref = () => {
-  try {
-    return localStorage.getItem(PREF_KEY) !== "off";
-  } catch {
-    return true;
-  }
-};
-const savePref = (on: boolean) => {
-  try {
-    localStorage.setItem(PREF_KEY, on ? "on" : "off");
-  } catch {}
-};
-
-let playing = typeof window === "undefined" ? true : readPref();
+let playing = false;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
 async function setup() {
+  // iPhone: play like media, so the silent switch doesn't mute it (iOS 17+)
+  const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+  if (session) session.type = "playback";
   ctx = new AudioContext();
   gain = ctx.createGain();
   gain.gain.value = 0;
@@ -66,7 +53,6 @@ async function setup() {
   started = true;
 }
 
-// must run inside a user gesture the first time: that's what lets the browser start audio
 async function start() {
   try {
     if (!ctx) loading = setup();
@@ -90,29 +76,9 @@ function stop() {
   setTimeout(() => !playing && ctx?.suspend(), FADE * 1000 + 50);
 }
 
-/**
- * Call once on mount. If music is on, it starts on the visitor's first click, tap or key
- * press anywhere on the page. Returns a cleanup function.
- */
-export function initMusic() {
-  if (!playing || ctx) return () => {};
-  const events = ["pointerdown", "keydown", "touchend"] as const;
-  const unlock = () => {
-    events.forEach((e) => window.removeEventListener(e, unlock, true));
-    if (!playing) return;
-    unlockedAt = performance.now();
-    start();
-  };
-  events.forEach((e) => window.addEventListener(e, unlock, true));
-  return () => events.forEach((e) => window.removeEventListener(e, unlock, true));
-}
-
-/** The music button. */
+/** The music button. Runs inside the click, which is what lets the browser start audio. */
 export function toggleMusic() {
-  // this click was the visitor's first gesture and has just started the music: keep it on
-  if (playing && performance.now() - unlockedAt < 1000) return;
   playing = !playing;
-  savePref(playing);
   emit();
   if (playing) start();
   else stop();
@@ -125,7 +91,7 @@ export function useMusicPlaying() {
       return () => listeners.delete(cb);
     },
     () => playing,
-    () => true,
+    () => false,
   );
 }
 
