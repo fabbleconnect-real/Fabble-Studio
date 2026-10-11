@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { toggleMusic, useMusicPlaying } from "@/lib/music";
+import { preloadMusic, toggleMusic, useMusicPlaying } from "@/lib/music";
 import { LOADED_EVENT } from "./Loader";
 
 // each bar has its own loop and tempo (keyframes in globals.css), so together they never repeat in step
@@ -24,6 +24,9 @@ const HINT_MS = 6000;
 export function SoundToggle({ className }: { className?: string }) {
   const on = useMusicPlaying();
   const [hint, setHint] = useState(false);
+
+  // get the track ready in the background, so pressing play is instant
+  useEffect(() => preloadMusic(), []);
 
   useEffect(() => {
     const timers: number[] = [];

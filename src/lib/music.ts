@@ -11,7 +11,8 @@ import { useSyncExternalStore } from "react";
  * The analyser sits before the gain, so the beat sync doesn't depend on the volume.
  *
  * Off by default: it only ever starts from the music button, never by itself.
- * Nothing loads until that first press.
+ * The track is downloaded and decoded quietly in the background once the page has
+ * settled (`preloadMusic`), so the first press starts it almost instantly.
  */
 const SRC = "/media/audio/trap-loop-v2.flac";
 const VOLUME = 0.35;
@@ -23,6 +24,30 @@ let analyser: AnalyserNode | null = null;
 let bins: Uint8Array<ArrayBuffer> | null = null;
 let started = false;
 let loading: Promise<void> | null = null;
+let decoded: Promise<AudioBuffer> | null = null;
+
+// decoded with an OfflineAudioContext: needs no click and plays in the real context later
+function loadBuffer() {
+  return (decoded ??= fetch(SRC)
+    .then((r) => r.arrayBuffer())
+    .then((data) => new OfflineAudioContext(1, 1, 44100).decodeAudioData(data))
+    .catch((e) => {
+      decoded = null; // let the next attempt (e.g. the click) try again
+      throw e;
+    }));
+}
+
+/** Fetch and decode the track in the background once the page is idle. Skipped on data saver. */
+export function preloadMusic() {
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  if (decoded || conn?.saveData) return () => {};
+  const run = () => loadBuffer().catch(() => {});
+  const t = window.setTimeout(() => {
+    if ("requestIdleCallback" in window) window.requestIdleCallback(run, { timeout: 3000 });
+    else run();
+  }, 3000);
+  return () => window.clearTimeout(t);
+}
 
 let playing = false;
 const listeners = new Set<() => void>();
@@ -43,8 +68,7 @@ async function setup() {
   bins = new Uint8Array(analyser.frequencyBinCount);
   analyser.connect(gain).connect(ctx.destination);
 
-  const data = await fetch(SRC).then((r) => r.arrayBuffer());
-  const buffer = await ctx.decodeAudioData(data);
+  const buffer = await loadBuffer();
   const source = ctx.createBufferSource();
   source.buffer = buffer;
   source.loop = true;
@@ -60,7 +84,8 @@ async function start() {
     await loading;
     if (!playing || !ctx || !gain) return; // turned off again while loading
     gain.gain.cancelScheduledValues(ctx.currentTime);
-    gain.gain.setTargetAtTime(VOLUME, ctx.currentTime, FADE / 3);
+    // quick fade in, so the first press is heard right away; the fade out stays gentle
+    gain.gain.setTargetAtTime(VOLUME, ctx.currentTime, 0.04);
   } catch (e) {
     console.warn("Music unavailable:", e);
     playing = false;
