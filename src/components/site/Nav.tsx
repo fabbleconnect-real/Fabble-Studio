@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { navChapters as chapters, whatsappHref } from "@/lib/site";
 import { Wordmark } from "./Logo";
 import { FlowButton } from "./FlowButton";
+import { SoundToggle } from "./SoundToggle";
 import { lockScroll, scrollToId, unlockScroll } from "./scroll";
 import { cn } from "@/lib/utils";
 
@@ -72,8 +73,7 @@ export function Nav() {
         ref={bar}
         className="invisible fixed inset-x-0 top-3 z-50 px-[var(--gutter)] md:top-5"
       >
-        {/* 880px for the navbar alone; widen to 952px when the music toggle returns beside it */}
-        <div className="mx-auto flex max-w-[880px] items-center gap-2 md:gap-3">
+        <div className="mx-auto flex max-w-[940px] items-center gap-2 md:gap-3">
         <nav
           aria-label="Main"
           className={cn(
@@ -148,7 +148,7 @@ export function Nav() {
           </div>
 
         </nav>
-        {/* music toggle: hidden until the track is added; put <SoundToggle /> back here then */}
+        <SoundToggle />
         </div>
       </header>
 

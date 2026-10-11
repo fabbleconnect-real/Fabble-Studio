@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { readBeat } from "@/lib/music";
 
 /**
  * A molten star: a latitude/longitude mesh of particles on a rippling shell,
@@ -20,6 +21,9 @@ uniform vec2 uMouse;   // pointer, in sphere units
 uniform float uHover;  // 0..1, eased
 uniform float uPx;     // base point size in device px
 uniform float uRadius;
+uniform float uLevel;   // music: how hard the low end is hitting, 0..1 (see lib/music)
+uniform float uKick;    // music: pulse on each beat, sized by the hit, decaying
+uniform float uShimmer; // music: hats and snares, 0..1
 out vec3 vColor;
 out float vAlpha;
 
@@ -79,7 +83,10 @@ void main(){
   float swell = snoise(o * 1.8 + vec3(0.0, t, 0.0));
   float ribbon = snoise(vec3(o.x * 3.2, o.y * 6.0, o.z * 3.2) - vec3(t * 1.4));
   float breathe = 1.0 + sin(uTime * 0.6) * 0.014;
-  float r = uRadius * breathe * (1.0 + swell * 0.05 + ribbon * 0.04);
+  // with music: the shell swells with the bass and punches outward on each kick, and its
+  // ripples deepen the harder the track hits
+  float pump = 1.0 + uLevel * 0.045 + uKick * 0.06;
+  float r = uRadius * breathe * pump * (1.0 + (swell * 0.05 + ribbon * 0.04) * (1.0 + uLevel * 1.6));
   vec3 p = n * r;
 
   // prominences: points under the pointer lift off the surface and run hot
@@ -88,6 +95,9 @@ void main(){
   float flick = snoise(o * 7.0 + vec3(uTime * 1.6));
   float flare = near * (0.35 + 0.65 * smoothstep(-0.2, 0.8, flick));
   p += n * flare * (0.05 + 0.2 * aRand);
+  // kicks also throw spikes off the whole surface, longer for harder hits
+  float spike = uKick * smoothstep(0.1, 0.9, flick);
+  p += n * spike * (0.03 + 0.09 * aRand);
 
   // the shell reads as a ring: bright at the limb, nearly gone face-on
   float rim = pow(1.0 - abs(n.z), 2.4);
@@ -97,6 +107,9 @@ void main(){
   float pole = smoothstep(0.9, 1.0, abs(aDir.y));
   float density = clamp(lat * 1.3, 0.12, 1.0);
   vAlpha = (0.02 + rim * 2.6) * back * density * (0.7 + 0.3 * aRand) * (0.85 + 0.25 * ribbon) + pole * rim * 0.25 + flare * 0.9;
+  // louder = brighter; hats make a scattered few points sparkle
+  vAlpha *= 1.0 + uLevel * 0.5 + uKick * 0.9;
+  vAlpha += uShimmer * rim * 0.5 * step(0.82, aRand) + spike * 0.6;
 
   // palette, base to crown: indigo, lilac, ember
   float h = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);
@@ -111,11 +124,13 @@ void main(){
   // where the shell is seen edge-on it runs hotter and paler
   c = mix(c, vec3(1.0, 0.94, 0.96), rim * rim * 0.3);
   c = mix(c, vec3(1.0, 0.6, 0.32), flare * 0.6);
+  // each kick flashes the limb warm-white
+  c = mix(c, vec3(1.0, 0.82, 0.7), uKick * rim * 0.35);
   vColor = c;
 
   float persp = 1.0 / (1.0 - p.z * 0.3);
   gl_Position = vec4(p.xy * persp * uFit, 0.0, 1.0);
-  gl_PointSize = uPx * (0.8 + aRand * 0.5) * (1.0 + flare * 1.2) * persp;
+  gl_PointSize = uPx * (0.8 + aRand * 0.5) * (1.0 + flare * 1.2 + spike * 0.8) * (1.0 + uLevel * 0.2) * persp;
 }`;
 
 const FRAG = /* glsl */ `#version 300 es
@@ -222,6 +237,9 @@ export function SolarOrb({ className, radius = 0.72 }: { className?: string; rad
     const uHover = u("uHover");
     const uPx = u("uPx");
     const uRadius = u("uRadius");
+    const uLevel = u("uLevel");
+    const uKick = u("uKick");
+    const uShimmer = u("uShimmer");
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE); // additive: overlapping embers burn brighter
@@ -261,6 +279,12 @@ export function SolarOrb({ className, radius = 0.72 }: { className?: string; rad
       gl.uniform1f(uTime, time);
       gl.uniform2f(uMouse, eased.x, eased.y);
       gl.uniform1f(uHover, eased.hover);
+      const beat = readBeat(performance.now());
+      gl.uniform1f(uLevel, beat.level);
+      gl.uniform1f(uKick, beat.kick);
+      gl.uniform1f(uShimmer, beat.shimmer);
+      // the CSS bloom behind the canvas breathes with it
+      root.style.setProperty("--pulse", (beat.level * 0.6 + beat.kick * 0.4).toFixed(3));
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.POINTS, 0, count);
     };
@@ -324,8 +348,10 @@ export function SolarOrb({ className, radius = 0.72 }: { className?: string; rad
     >
       {/* bloom: the corona bleeding into the dark, ember above and indigo below */}
       <div
-        className="absolute left-1/2 top-1/2 aspect-square w-[calc(var(--r)*100cqmin*1.12)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-30"
+        className="absolute left-1/2 top-1/2 aspect-square w-[calc(var(--r)*100cqmin*1.12)] -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{
+          opacity: "calc(0.3 + var(--pulse, 0) * 0.35)",
+          scale: "calc(1 + var(--pulse, 0) * 0.05)",
           background: "linear-gradient(180deg, #ff3d2e 0%, #ff3d2e 18%, #8a5bd6 52%, #3d63ff 85%, #3d63ff 100%)",
           // soft stops instead of a blur filter, which would re-rasterize every scroll frame
           maskImage: "radial-gradient(closest-side, transparent 62%, rgba(0,0,0,0.35) 74%, #000 86%, rgba(0,0,0,0.3) 95%, transparent 100%)",
