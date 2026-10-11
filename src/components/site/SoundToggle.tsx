@@ -75,11 +75,11 @@ export function SoundToggle({ className }: { className?: string }) {
       <span
         aria-hidden
         className={cn(
-          "pointer-events-none absolute right-0 top-full mt-3 whitespace-nowrap rounded-full border border-hair bg-night/90 px-3.5 py-1.5 text-xs font-medium text-paper shadow-[0_12px_30px_-12px_var(--drop)] backdrop-blur-xl transition-[opacity,translate] duration-700 [transition-timing-function:var(--ease-out-expo)]",
+          "pointer-events-none absolute right-0 top-full mt-3 whitespace-nowrap rounded-full border border-paper/70 bg-night/90 px-3.5 py-1.5 text-xs font-medium text-paper shadow-[0_12px_30px_-12px_var(--drop)] backdrop-blur-xl transition-[opacity,translate] duration-700 [transition-timing-function:var(--ease-out-expo)]",
           hint ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0",
         )}
       >
-        <span className="absolute -top-[5px] right-[17px] size-2.5 rotate-45 border-l border-t border-hair bg-night md:right-[19px]" />
+        <span className="absolute -top-[5px] right-[17px] size-2.5 rotate-45 border-l border-t border-paper/70 bg-night md:right-[19px]" />
         Don&apos;t click this button
       </span>
     </span>

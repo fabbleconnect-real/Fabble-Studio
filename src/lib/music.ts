@@ -13,7 +13,7 @@ import { useSyncExternalStore } from "react";
  * Off by default: it only ever starts from the music button, never by itself.
  * Nothing loads until that first press.
  */
-const SRC = "/media/audio/trap-loop.flac";
+const SRC = "/media/audio/trap-loop-v2.flac";
 const VOLUME = 0.35;
 const FADE = 0.4; // seconds
 
@@ -121,7 +121,7 @@ const band = (from: number, to: number) => {
  * Beats are found by spectral flux: how much the low end (~45–520 Hz) suddenly grows from
  * one frame to the next. Sustained 808s keep the bass high between hits, so watching the
  * bass level itself misses re-hits; its sudden increase catches them. Tuned on the track
- * offline: big downbeats score ~0.24, 808 re-hits 0.05–0.17, the soft intro under 0.04.
+ * offline: its hardest hits score 0.1–0.2 (a full kick), most hits 0.03–0.07 (a partial one).
  */
 export function readBeat(now: number) {
   const dt = Math.min(0.1, lastT ? (now - lastT) / 1000 : 1 / 60);
@@ -145,7 +145,7 @@ export function readBeat(now: number) {
   const sd = Math.sqrt(Math.max(0, fluxSq - fluxMean * fluxMean));
   if (flux > Math.max(0.025, fluxMean + 1.5 * sd) && now - lastKick > 120) {
     lastKick = now;
-    beat.kick = Math.max(beat.kick, Math.min(1, flux / 0.2));
+    beat.kick = Math.max(beat.kick, Math.min(1, flux / 0.12));
   } else {
     beat.kick *= Math.exp(-dt * 7);
   }
