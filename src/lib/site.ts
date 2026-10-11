@@ -15,8 +15,14 @@ export const site = {
 };
 
 export const whatsappHref = `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(site.whatsappMessage)}`;
-// Opens a Gmail compose window instead of the OS default mail app (mailto:).
-export const emailHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(site.email)}`;
+// Opens a Gmail compose window instead of the OS default mail app (mailto:), optionally pre-filled.
+export const gmailCompose = (subject?: string, body?: string) => {
+  const q = new URLSearchParams({ view: "cm", fs: "1", to: site.email });
+  if (subject) q.set("su", subject);
+  if (body) q.set("body", body);
+  return `https://mail.google.com/mail/?${q}`;
+};
+export const emailHref = gmailCompose();
 export const callHref = `tel:${site.phones[0].tel}`;
 
 // Chapters shown as markers on the navbar timeline, in page order.

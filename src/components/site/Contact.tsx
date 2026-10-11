@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FlowButton } from "./FlowButton";
-import { callHref, emailHref, site, whatsappHref } from "@/lib/site";
+import { callHref, emailHref, gmailCompose, site, whatsappHref } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const needs = ["Website", "Video", "Both"];
@@ -20,7 +20,7 @@ const currencies = [
 ] as const;
 type Currency = (typeof currencies)[number]["code"];
 
-type Status = "idle" | "sending" | "sent" | "error";
+type Status = "idle" | "opened";
 
 function Chips({
   name,
@@ -93,7 +93,7 @@ const field =
 export function Contact() {
   const root = useRef<HTMLElement>(null);
   const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState("");
+  const [draft, setDraft] = useState("");
   const [currency, setCurrency] = useState<Currency>("USD");
   const [copied, setCopied] = useState(false);
 
@@ -134,24 +134,30 @@ export function Contact() {
     { scope: root },
   );
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // No server: the form writes the email and opens it in Gmail, ready for the visitor to send.
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.currentTarget));
-    setStatus("sending");
-    setError("");
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "The message didn't go through.");
-      setStatus("sent");
-    } catch (err) {
-      setStatus("error");
-      setError(err instanceof Error ? err.message : "The message didn't go through.");
-    }
+    const f = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
+    const name = f.name.trim();
+    const subject = `New project: ${f.need} | ${name}`;
+    const body = [
+      "Hi Fabble Studio,",
+      "",
+      `Name: ${name}`,
+      `Email: ${f.email.trim()}`,
+      `Looking for: ${f.need}`,
+      `Budget: ${f.budget} (${f.currency})`,
+      "",
+      "About the project:",
+      f.message.trim(),
+      "",
+      "Thanks,",
+      name,
+    ].join("\n");
+    const url = gmailCompose(subject, body);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setDraft(url);
+    setStatus("opened");
   }
 
   return (
@@ -242,9 +248,9 @@ export function Contact() {
 
         <div className="relative lg:col-span-7 lg:col-start-6">
           <AnimatePresence mode="wait" initial={false}>
-            {status === "sent" ? (
+            {status === "opened" ? (
               <motion.div
-                key="sent"
+                key="opened"
                 role="status"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -255,13 +261,18 @@ export function Contact() {
                 <svg viewBox="0 0 12 12" className="size-10" aria-hidden>
                   <path d="M2 1.5 10.5 6 2 10.5z" fill="#ff7a2c" />
                 </svg>
-                <p className="display mt-6 text-5xl">Message sent.</p>
+                <p className="display mt-6 text-5xl">Almost there.</p>
                 <p className="mt-4 max-w-[40ch] text-lg text-paper/80">
-                  Thanks for reaching out. We&apos;ll reply within one working day to set up a call.
+                  Your message is written and waiting in Gmail. Just press Send there, and we&apos;ll reply within one working day to set up a call.
                 </p>
-                <button type="button" onClick={() => setStatus("idle")} className="mt-8 self-start text-mist underline underline-offset-4 hover:text-paper" data-cursor="hover">
-                  Send another message
-                </button>
+                <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                  <a href={draft} target="_blank" rel="noopener noreferrer" className="text-paper underline underline-offset-4 hover:decoration-ember-hot" data-cursor="hover">
+                    Gmail didn&apos;t open? Open it here
+                  </a>
+                  <button type="button" onClick={() => setStatus("idle")} className="text-mist underline underline-offset-4 hover:text-paper" data-cursor="hover">
+                    Write a new message
+                  </button>
+                </div>
               </motion.div>
             ) : (
               <motion.form
@@ -313,17 +324,11 @@ export function Contact() {
                     className={cn(field, "min-h-32 resize-none")}
                   />
                 </div>
-                {/* honeypot */}
-                <input type="text" name="company_site" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
                 <div className="contact-in flex flex-wrap items-center gap-5">
-                  <FlowButton type="submit" size="lg" disabled={status === "sending"}>
-                    {status === "sending" ? "Sending…" : "Send message"}
+                  <FlowButton type="submit" size="lg">
+                    Send message
                   </FlowButton>
-                  {status === "error" && (
-                    <p role="alert" className="text-[var(--danger-text)]">
-                      {error} Try again, or message us on WhatsApp.
-                    </p>
-                  )}
+                  <p className="text-sm text-mist">Opens Gmail with your message ready to send.</p>
                 </div>
               </motion.form>
             )}
