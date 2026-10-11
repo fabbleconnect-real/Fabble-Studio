@@ -63,7 +63,7 @@ export function Hero() {
       {/* outer layers carry the scroll parallax, inner ones the intro, so the two never fight over opacity */}
       <div className="hero-bg-scroll absolute inset-0 -z-10 will-change-transform [mask-image:linear-gradient(to_bottom,#000_75%,transparent)]" aria-hidden>
         <div className="hero-bg size-full">
-          <FloatingParticles particleCount={180} particleColor="#eeedf7" />
+          <FloatingParticles particleCount={340} particleSize={1} particleColor="#eeedf7" />
         </div>
       </div>
       {/* above the dust, behind the words */}

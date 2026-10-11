@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { toggleMusic, useMusicPlaying } from "@/lib/music";
+import { initMusic, toggleMusic, useMusicPlaying } from "@/lib/music";
 
 // each bar has its own loop and tempo (keyframes in globals.css), so together they never repeat in step
 const bars = [
@@ -13,10 +14,12 @@ const bars = [
 /**
  * Round button beside the navbar for the background music: three thin bars that swell
  * and shrink about their centre line like a live equaliser while it plays, and hold
- * still while it's paused. Starts paused: browsers only allow sound after a click.
+ * still while it's paused. On by default; the sound itself starts on the visitor's first
+ * click, tap or key press, since browsers block audio until then (see lib/music).
  */
 export function SoundToggle({ className }: { className?: string }) {
   const on = useMusicPlaying();
+  useEffect(() => initMusic(), []);
 
   return (
     <button

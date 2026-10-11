@@ -6,12 +6,18 @@ import { useSyncExternalStore } from "react";
  * Background music + live analysis for the hero orb.
  *
  * The loop is decoded into an AudioBuffer and played by a looping buffer source, so it
- * repeats with no gap (an <audio loop> would click at the seam). It runs through a gain
- * (for soft fades) and an analyser the orb reads every frame via `readBeat()`.
- * Nothing loads until the visitor first presses play.
+ * repeats with no gap (an <audio loop> would click at the seam). It runs through an
+ * analyser the orb reads every frame via `readBeat()`, then a gain for volume and fades.
+ * The analyser sits before the gain, so the beat sync doesn't depend on the volume.
+ *
+ * Music is on by default, but browsers only allow sound after the visitor interacts with
+ * the page, so it starts on their first click, tap or key press anywhere (`initMusic`).
+ * If they turn it off, that choice is remembered.
  */
 const SRC = "/media/audio/trap-loop.flac";
+const VOLUME = 0.35;
 const FADE = 0.4; // seconds
+const PREF_KEY = "fabble-music";
 
 let ctx: AudioContext | null = null;
 let gain: GainNode | null = null;
@@ -19,8 +25,22 @@ let analyser: AnalyserNode | null = null;
 let bins: Uint8Array<ArrayBuffer> | null = null;
 let started = false;
 let loading: Promise<void> | null = null;
+let unlockedAt = -Infinity; // when the first gesture started the music
 
-let playing = false;
+const readPref = () => {
+  try {
+    return localStorage.getItem(PREF_KEY) !== "off";
+  } catch {
+    return true;
+  }
+};
+const savePref = (on: boolean) => {
+  try {
+    localStorage.setItem(PREF_KEY, on ? "on" : "off");
+  } catch {}
+};
+
+let playing = typeof window === "undefined" ? true : readPref();
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -34,44 +54,68 @@ async function setup() {
   analyser.minDecibels = -90;
   analyser.maxDecibels = -10;
   bins = new Uint8Array(analyser.frequencyBinCount);
-  gain.connect(analyser).connect(ctx.destination);
+  analyser.connect(gain).connect(ctx.destination);
 
   const data = await fetch(SRC).then((r) => r.arrayBuffer());
   const buffer = await ctx.decodeAudioData(data);
   const source = ctx.createBufferSource();
   source.buffer = buffer;
   source.loop = true;
-  source.connect(gain);
+  source.connect(analyser);
   source.start();
   started = true;
 }
 
-/** Play or pause. Must be called from a click: browsers only allow audio after a user gesture. */
-export async function toggleMusic() {
-  playing = !playing;
-  emit();
+// must run inside a user gesture the first time: that's what lets the browser start audio
+async function start() {
   try {
-    if (playing) {
-      if (!ctx) {
-        // created inside the click so the browser lets it start
-        loading = setup();
-      }
-      await ctx!.resume();
-      await loading;
-      if (!playing || !ctx || !gain) return; // paused again while loading
-      gain.gain.cancelScheduledValues(ctx.currentTime);
-      gain.gain.setTargetAtTime(1, ctx.currentTime, FADE / 3);
-    } else if (ctx && gain) {
-      gain.gain.cancelScheduledValues(ctx.currentTime);
-      gain.gain.setTargetAtTime(0, ctx.currentTime, FADE / 3);
-      // suspend once faded, so the loop keeps its place and costs nothing while paused
-      setTimeout(() => !playing && ctx?.suspend(), FADE * 1000 + 50);
-    }
+    if (!ctx) loading = setup();
+    await ctx!.resume();
+    await loading;
+    if (!playing || !ctx || !gain) return; // turned off again while loading
+    gain.gain.cancelScheduledValues(ctx.currentTime);
+    gain.gain.setTargetAtTime(VOLUME, ctx.currentTime, FADE / 3);
   } catch (e) {
     console.warn("Music unavailable:", e);
     playing = false;
     emit();
   }
+}
+
+function stop() {
+  if (!ctx || !gain) return;
+  gain.gain.cancelScheduledValues(ctx.currentTime);
+  gain.gain.setTargetAtTime(0, ctx.currentTime, FADE / 3);
+  // suspend once faded, so the loop keeps its place and costs nothing while paused
+  setTimeout(() => !playing && ctx?.suspend(), FADE * 1000 + 50);
+}
+
+/**
+ * Call once on mount. If music is on, it starts on the visitor's first click, tap or key
+ * press anywhere on the page. Returns a cleanup function.
+ */
+export function initMusic() {
+  if (!playing || ctx) return () => {};
+  const events = ["pointerdown", "keydown", "touchend"] as const;
+  const unlock = () => {
+    events.forEach((e) => window.removeEventListener(e, unlock, true));
+    if (!playing) return;
+    unlockedAt = performance.now();
+    start();
+  };
+  events.forEach((e) => window.addEventListener(e, unlock, true));
+  return () => events.forEach((e) => window.removeEventListener(e, unlock, true));
+}
+
+/** The music button. */
+export function toggleMusic() {
+  // this click was the visitor's first gesture and has just started the music: keep it on
+  if (playing && performance.now() - unlockedAt < 1000) return;
+  playing = !playing;
+  savePref(playing);
+  emit();
+  if (playing) start();
+  else stop();
 }
 
 export function useMusicPlaying() {
@@ -81,7 +125,7 @@ export function useMusicPlaying() {
       return () => listeners.delete(cb);
     },
     () => playing,
-    () => false,
+    () => true,
   );
 }
 
