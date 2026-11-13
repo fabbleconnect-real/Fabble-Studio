@@ -15,7 +15,7 @@ import { useSyncExternalStore } from "react";
  * settled (`preloadMusic`), so the first press starts it almost instantly.
  */
 const SRC = "/media/audio/trap-loop-v2.flac";
-const VOLUME = 1;
+const VOLUME = 1; // the track's own loudness
 const FADE = 0.4; // seconds
 
 let ctx: AudioContext | null = null;
